@@ -44,6 +44,7 @@ public class MethodInputParametersMustBeFinal extends BugChecker
 
   @Override
   public Description matchClass(final ClassTree tree, final VisitorState state) {
+    System.out.println("*** >> Checking class: " + tree.getSimpleName());
     isAbstraction =
         isInterface(tree.getModifiers())
             || isAnonymousClassInAbstraction(tree)
@@ -54,7 +55,6 @@ public class MethodInputParametersMustBeFinal extends BugChecker
 
   @Override
   public Description matchMethod(final MethodTree tree, final VisitorState state) {
-    System.out.println("*** Method name:" + tree.getName());
     if (isGenerated) {
       return Description.NO_MATCH;
     }
