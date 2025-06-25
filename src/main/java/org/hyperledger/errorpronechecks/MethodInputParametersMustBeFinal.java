@@ -60,7 +60,7 @@ public class MethodInputParametersMustBeFinal extends BugChecker
 
   @Override
   public Description matchMethod(final MethodTree tree, final VisitorState state) {
-    if (isBlobType) {
+    if (isBlobType && tree.getName().contentEquals("<init>")) {
       System.out.println("*** >> Handling BlobType." + tree.getName());
     }
     if (isGenerated) {
@@ -82,7 +82,7 @@ public class MethodInputParametersMustBeFinal extends BugChecker
 
   private Description matchParameters(final MethodTree tree) {
     for (final VariableTree inputParameter : tree.getParameters()) {
-      if (isBlobType) {
+      if (isBlobType && tree.getName().contentEquals("<init>")) {
         System.out.printf(
             "*** >> Modifiers for: %s.%s: %s %n",
             tree.getName(),
