@@ -41,20 +41,28 @@ public class MethodInputParametersMustBeFinal extends BugChecker
 
   private boolean isAbstraction = false;
   private boolean isGenerated = false;
+  private boolean isBlobType = false;
 
   @Override
   public Description matchClass(final ClassTree tree, final VisitorState state) {
-    System.out.println("*** >> Checking class: " + tree.getSimpleName());
+    if (tree.getSimpleName().contentEquals("BlobType")) {
+      isBlobType = true;
+    }
+
     isAbstraction =
         isInterface(tree.getModifiers())
             || isAnonymousClassInAbstraction(tree)
             || isEnumInAbstraction(tree);
     isGenerated = ASTHelpers.hasDirectAnnotationWithSimpleName(tree, "Generated");
+
     return Description.NO_MATCH;
   }
 
   @Override
   public Description matchMethod(final MethodTree tree, final VisitorState state) {
+    if (isBlobType) {
+      System.out.println("*** >> Handling BlobType." + tree.getName());
+    }
     if (isGenerated) {
       return Description.NO_MATCH;
     }
@@ -74,6 +82,13 @@ public class MethodInputParametersMustBeFinal extends BugChecker
 
   private Description matchParameters(final MethodTree tree) {
     for (final VariableTree inputParameter : tree.getParameters()) {
+      if (isBlobType) {
+        System.out.printf(
+            "*** >> Modifiers for: %s.%s: %s %n",
+            tree.getName(),
+            inputParameter.getName(),
+            inputParameter.getModifiers().getFlags().toString());
+      }
       if (isMissingFinalModifier(inputParameter)) {
         System.out.printf(
             "*** >> Missing final modifier for input parameter: %s.%s %n",
