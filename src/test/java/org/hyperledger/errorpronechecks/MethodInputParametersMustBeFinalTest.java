@@ -56,4 +56,11 @@ public class MethodInputParametersMustBeFinalTest {
   public void constructorAndMethodInputParametersMustBeFinalPositiveCases() {
     compilationHelper.addSourceFile("ConstructorParameterMustBeFinalPositiveCases.java").doTest();
   }
+
+  @Test
+  public void methodInputParametersMustBeFinalEnumPositiveCases() {
+    compilationHelper
+            .addSourceFile("MethodInputParametersMustBeFinalEnumPositiveCases.java")
+            .doTest();
+  }
 }
