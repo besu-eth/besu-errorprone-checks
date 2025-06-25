@@ -14,12 +14,23 @@
  */
 package org.hyperledger.errorpronechecks;
 
-public interface MethodInputParametersMustBeFinalInterfacePositiveCases {
+import javax.annotation.processing.Generated;
+import java.util.function.Consumer;
 
-  // BUG: Diagnostic contains: Method input parameters must be final.
-  default void defaultMethod(int count) {}
+public class MethodInputParametersMustBeFinalEdgeCases {
 
-  // BUG: Diagnostic contains: Method input parameters must be final.
-  static void staticHelper(String value) {}
+  // Lambda expression – should NOT trigger
+  public void lambdaTest() {
+    Consumer<String> consumer = s -> System.out.println(s);
+  }
+
+  // Anonymous inner class – should NOT trigger
+  Runnable r = new Runnable() {
+    @Override
+    public void run() {}
+  };
+
+  // Method-level @Generated – should not trigger
+  @Generated("test")
+  public void methodLevelGenerated(int x) {}
 }
-

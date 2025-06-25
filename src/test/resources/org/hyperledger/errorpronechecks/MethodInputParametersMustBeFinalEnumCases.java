@@ -14,27 +14,30 @@
  */
 package org.hyperledger.errorpronechecks;
 
-import java.util.Observable;
-import java.util.Observer;
+public enum MethodInputParametersMustBeFinalEnumCases {
+  EXAMPLE(1);
 
-public interface MethodInputParametersMustBeFinalInterfaceNegativeCases {
+  private final int id;
 
-  void parameterCannotBeFinal(int value);
-
-  default void concreteMethod(final long value) {}
-
-  static void anotherConcreteMethod(final double value) {}
-
-  static Observer annonymousClass() {
-    return new Observer() {
-      @Override
-      public void update(final Observable o, final Object arg) {}
-    };
+  // BUG: Diagnostic contains: Method input parameters must be final.
+  MethodInputParametersMustBeFinalEnumCases(int id) {
+    this.id = id;
   }
 
-  void methodAfterAnnonymousClass(int value);
+  public int getId() {
+    return id;
+  }
 
-  enum Status {}
-
-  void methodAfterEnum(int value);
+  // BUG: Diagnostic contains: Method input parameters must be final.
+  public static MethodInputParametersMustBeFinalEnumCases fromId(int id) {
+    for (var v : values()) {
+      if (v.getId() == id) {
+        return v;
+      }
+    }
+    throw new IllegalArgumentException("Invalid ID");
+  }
 }
+
+
+

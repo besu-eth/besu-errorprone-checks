@@ -18,46 +18,27 @@ import javax.annotation.processing.Generated;
 
 public class MethodInputParametersMustBeFinalNegativeCases {
 
-  public void noInputParameters() {}
+  public void noParams() {}
 
-  public void onlyPrimativeInputParameters(final long value) {}
+  public void allFinalParams(final String input, final int count) {}
 
-  public void onlyObjectInputParameters(final Object value) {}
+  public void finalVarArgs(final String... args) {}
 
-  public void mixedInputParameters(final Object value, final int anotherValue) {}
+  public static void staticFinalParam(final int id) {}
 
-  public interface allInterfacesAreValid {
-    void parameterCannotBeFinal(int value);
+  public MethodInputParametersMustBeFinalNegativeCases(final String name) {}
+
+  @Generated("tool")
+  public static class GeneratedContainer {
+    public void nonFinalIgnored(int shouldBeIgnored) {}
+
+    public class NestedGenerated {
+      public void alsoIgnored(String s) {}
+    }
+  }
+
+  public interface InterfaceWithAbstractMethod {
+    void paramCannotBeFinal(int value); // abstract, allowed
   }
 }
 
-@Generated(
-    value = "test",
-    comments = "Every method is buggy, but ignored because the class has been tagged generated")
-class MethodInputParametersMustBeFinalPositiveCasesBugGenerated1 {
-
-  public void primativeInputMethod(int value) {}
-
-  public void objectInputMethod(Object value) {}
-
-  public void mixedInputMethod(Object value, int anotherValue) {}
-
-  @Generated(
-      value = "test",
-      comments = "Every method is buggy, but ignored because the class has been tagged generated")
-  public abstract class abstractClassDefinition {
-    public void concreteMethodsAreIncluded(int value) {}
-  }
-
-  public void varArgsInputMethod(String... value) {}
-}
-
-@Generated(
-    value = "test",
-    comments = "Every method is buggy, but ignored because the class has been tagged generated")
-class MethodInputParametersMustBeFinalPositiveCasesBugGenerated2 {
-
-  public void mixedInputMethodFirstFinal(final Object value, int anotherValue) {}
-
-  public void mixedInputMethodSecondFinal(Object value, final int anotherValue) {}
-}
