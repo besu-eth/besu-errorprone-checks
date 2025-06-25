@@ -41,19 +41,15 @@ public class MethodInputParametersMustBeFinal extends BugChecker
 
   private boolean isAbstraction = false;
   private boolean isGenerated = false;
-  private boolean isBlobType = false;
 
   @Override
   public Description matchClass(final ClassTree tree, final VisitorState state) {
-    if (tree.getSimpleName().contentEquals("BlobType")) {
-      System.out.println("*** >> Handling " + tree.getClass().getName());
-      isBlobType = true;
-    }
-
-    isAbstraction =
-        isInterface(tree.getModifiers())
-            || isAnonymousClassInAbstraction(tree)
-            || isEnumInAbstraction(tree);
+    var isInterface = ASTHelpers.getSymbol(tree).isInterface();
+    var isEnum = ASTHelpers.getSymbol(tree).isEnum();
+    var isAnon = ASTHelpers.getSymbol(tree).isAnonymous();
+    isAbstraction = isInterface || isEnum || isAnon;
+    System.out.println(">>> Class: " + tree.getSimpleName());
+    System.out.println(">>> isAbstraction: " + isAbstraction);
     isGenerated = ASTHelpers.hasDirectAnnotationWithSimpleName(tree, "Generated");
 
     return Description.NO_MATCH;
@@ -61,20 +57,21 @@ public class MethodInputParametersMustBeFinal extends BugChecker
 
   @Override
   public Description matchMethod(final MethodTree tree, final VisitorState state) {
-    if (isBlobType && tree.getName().contentEquals("<init>")) {
-      System.out.println("*** >> Handling BlobType." + tree.getName());
-    }
     if (isGenerated) {
       return Description.NO_MATCH;
     }
 
+    // Handle constructors specially
+    boolean isConstructor = tree.getName().contentEquals("<init>");
+    System.out.println(">>> Method: " + tree.getName());
+
     final ModifiersTree mods = tree.getModifiers();
 
     if (isAbstraction) {
-      if (isConcreteMethod(mods)) {
+      if (isConstructor || isConcreteMethod(mods)) {
         return matchParameters(tree);
       }
-    } else if (isNotAbstract(mods)) {
+    } else if (isConstructor || isNotAbstract(mods)) {
       return matchParameters(tree);
     }
 
@@ -83,17 +80,7 @@ public class MethodInputParametersMustBeFinal extends BugChecker
 
   private Description matchParameters(final MethodTree tree) {
     for (final VariableTree inputParameter : tree.getParameters()) {
-      if (isBlobType && tree.getName().contentEquals("<init>")) {
-        System.out.printf(
-            "*** >> Modifiers for: %s.%s: %s %n",
-            tree.getName(),
-            inputParameter.getName(),
-            inputParameter.getModifiers().getFlags().toString());
-      }
       if (isMissingFinalModifier(inputParameter)) {
-        System.out.printf(
-            "*** >> Missing final modifier for input parameter: %s.%s %n",
-            tree.getName(), inputParameter.getName());
         return describeMatch(tree);
       }
     }
@@ -118,16 +105,8 @@ public class MethodInputParametersMustBeFinal extends BugChecker
     return mods.getFlags().contains(Modifier.DEFAULT) || mods.getFlags().contains(Modifier.STATIC);
   }
 
-  private boolean isAnonymousClassInAbstraction(final ClassTree tree) {
-    return isAbstraction && isAnonymousClass(tree);
-  }
-
   private boolean isAnonymousClass(final ClassTree tree) {
     return tree.getSimpleName().contentEquals("");
-  }
-
-  private boolean isEnumInAbstraction(final ClassTree tree) {
-    return isAbstraction && isEnum(tree);
   }
 
   @SuppressWarnings("TreeToString")

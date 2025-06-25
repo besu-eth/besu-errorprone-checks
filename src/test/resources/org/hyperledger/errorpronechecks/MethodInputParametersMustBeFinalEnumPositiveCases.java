@@ -14,7 +14,19 @@
  */
 package org.hyperledger.errorpronechecks;
 
-public enum MethodInputParametersMustBeFinalEnumPositiveCases {
+import javax.annotation.processing.Generated;
+
+@Generated(
+        value = "test",
+        comments = "Every method is buggy, but ignored because the class has been tagged generated")
+class GeneratedTestClass {
+
+  public void primativeInputMethod(int value) {
+  }
+
+}
+
+enum BlobType {
   KZG_PROOF(0),
   KZG_CELL_PROOFS(1);
 
@@ -22,7 +34,7 @@ public enum MethodInputParametersMustBeFinalEnumPositiveCases {
   private final int versionId;
 
   // BUG: Diagnostic contains: Method input parameters must be final.
-  MethodInputParametersMustBeFinalEnumPositiveCases(int versionId) {
+  BlobType(int versionId) {
     this.versionId = versionId;
   }
 
@@ -30,12 +42,23 @@ public enum MethodInputParametersMustBeFinalEnumPositiveCases {
     return versionId;
   }
 
-  public static MethodInputParametersMustBeFinalEnumPositiveCases of(final int versionId) {
-    for (MethodInputParametersMustBeFinalEnumPositiveCases blobType : MethodInputParametersMustBeFinalEnumPositiveCases.values()) {
+  // BUG: Diagnostic contains: Method input parameters must be final.
+  public static BlobType of(int versionId) {
+    for (BlobType blobType : BlobType.values()) {
       if (blobType.getVersionId() == versionId) {
         return blobType;
       }
     }
     throw new IllegalArgumentException("No BlobType found for version ID: " + versionId);
+  }
+
+  // BUG: Diagnostic contains: Method input parameters must be final.
+  static BlobType from(String name) {
+    for (BlobType blobType : BlobType.values()) {
+      if (blobType.name().equals(name)) {
+        return blobType;
+      }
+    }
+    throw new IllegalArgumentException("No BlobType found for name: " + name);
   }
 }
