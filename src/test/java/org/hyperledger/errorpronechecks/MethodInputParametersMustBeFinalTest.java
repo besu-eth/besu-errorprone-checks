@@ -29,31 +29,36 @@ public class MethodInputParametersMustBeFinalTest {
   }
 
   @Test
-  public void methodInputParametersMustBeFinalPositiveCases() {
+  public void positiveCases() {
     compilationHelper.addSourceFile("MethodInputParametersMustBeFinalPositiveCases.java").doTest();
   }
 
   @Test
-  public void methodInputParametersMustBeFinalInterfacePositiveCases() {
+  public void negativeCases() {
+    compilationHelper.addSourceFile("MethodInputParametersMustBeFinalNegativeCases.java").doTest();
+  }
+
+  @Test
+  public void interfacePositiveCases() {
     compilationHelper
         .addSourceFile("MethodInputParametersMustBeFinalInterfacePositiveCases.java")
         .doTest();
   }
 
   @Test
-  public void methodInputParametersMustBeFinalNegativeCases() {
-    compilationHelper.addSourceFile("MethodInputParametersMustBeFinalNegativeCases.java").doTest();
+  public void enumCases() {
+    compilationHelper.addSourceFile("MethodInputParametersMustBeFinalEnumCases.java").doTest();
   }
 
   @Test
-  public void methodInputParametersMustBeFinalInterfaceNegativeCases() {
+  public void nestedEnumCases() {
     compilationHelper
-        .addSourceFile("MethodInputParametersMustBeFinalInterfaceNegativeCases.java")
+        .addSourceFile("MethodInputParametersMustBeFinalNestedEnumCases.java")
         .doTest();
   }
 
   @Test
-  public void constructorAndMethodInputParametersMustBeFinalPositiveCases() {
-    compilationHelper.addSourceFile("ConstructorParameterMustBeFinalPositiveCases.java").doTest();
+  public void edgeCases() {
+    compilationHelper.addSourceFile("MethodInputParametersMustBeFinalEdgeCases.java").doTest();
   }
 }

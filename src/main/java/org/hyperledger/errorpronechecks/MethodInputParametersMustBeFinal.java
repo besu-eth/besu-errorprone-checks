@@ -12,6 +12,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+
 package org.hyperledger.errorpronechecks;
 
 import static com.google.errorprone.BugPattern.SeverityLevel.WARNING;
@@ -22,49 +23,43 @@ import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
-import com.google.errorprone.bugpatterns.BugChecker.ClassTreeMatcher;
 import com.google.errorprone.bugpatterns.BugChecker.MethodTreeMatcher;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.util.ASTHelpers;
-import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.ModifiersTree;
 import com.sun.source.tree.VariableTree;
+import com.sun.tools.javac.code.Symbol;
 
 @AutoService(BugChecker.class)
 @BugPattern(
     summary = "Method input parameters must be final.",
     severity = WARNING,
     linkType = BugPattern.LinkType.NONE)
-public class MethodInputParametersMustBeFinal extends BugChecker
-    implements MethodTreeMatcher, ClassTreeMatcher {
-
-  private boolean isAbstraction = false;
-  private boolean isGenerated = false;
-
-  @Override
-  public Description matchClass(final ClassTree tree, final VisitorState state) {
-    isAbstraction =
-        isInterface(tree.getModifiers())
-            || isAnonymousClassInAbstraction(tree)
-            || isEnumInAbstraction(tree);
-    isGenerated = ASTHelpers.hasDirectAnnotationWithSimpleName(tree, "Generated");
-    return Description.NO_MATCH;
-  }
+public class MethodInputParametersMustBeFinal extends BugChecker implements MethodTreeMatcher {
 
   @Override
   public Description matchMethod(final MethodTree tree, final VisitorState state) {
-    if (isGenerated) {
+    var methodSymbol = ASTHelpers.getSymbol(tree);
+    if (methodSymbol == null || isGeneratedMethod(methodSymbol, state)) {
       return Description.NO_MATCH;
     }
 
+    var enclosingClass = ASTHelpers.enclosingClass(methodSymbol);
+    if (enclosingClass == null || isGeneratedClass(enclosingClass, state)) {
+      return Description.NO_MATCH;
+    }
+
+    boolean isAbstractContext =
+        enclosingClass.isInterface() || enclosingClass.isEnum() || enclosingClass.isAnonymous();
+    boolean isConstructor = tree.getName().contentEquals("<init>");
     final ModifiersTree mods = tree.getModifiers();
 
-    if (isAbstraction) {
-      if (isConcreteMethod(mods)) {
+    if (isAbstractContext) {
+      if (isConstructor || isConcreteMethod(mods)) {
         return matchParameters(tree);
       }
-    } else if (isNotAbstract(mods)) {
+    } else if (isConstructor || isNotAbstract(mods)) {
       return matchParameters(tree);
     }
 
@@ -77,55 +72,39 @@ public class MethodInputParametersMustBeFinal extends BugChecker
         return describeMatch(tree);
       }
     }
-
     return Description.NO_MATCH;
   }
 
-  private boolean isMissingFinalModifier(final VariableTree inputParameter) {
-    return !inputParameter.getModifiers().getFlags().contains(Modifier.FINAL);
+  private boolean isMissingFinalModifier(final VariableTree param) {
+    return !param.getModifiers().getFlags().contains(Modifier.FINAL);
   }
 
   private boolean isNotAbstract(final ModifiersTree mods) {
     return !mods.getFlags().contains(Modifier.ABSTRACT);
   }
 
-  @SuppressWarnings("TreeToString")
-  private boolean isInterface(final ModifiersTree mods) {
-    return mods.toString().contains("interface");
-  }
-
   private boolean isConcreteMethod(final ModifiersTree mods) {
     return mods.getFlags().contains(Modifier.DEFAULT) || mods.getFlags().contains(Modifier.STATIC);
   }
 
-  private boolean isAnonymousClassInAbstraction(final ClassTree tree) {
-    return isAbstraction && isAnonymousClass(tree);
+  private boolean isGeneratedMethod(Symbol symbol, VisitorState state) {
+    return hasGeneratedAnnotation(symbol, state);
   }
 
-  private boolean isAnonymousClass(final ClassTree tree) {
-    return tree.getSimpleName().contentEquals("");
+  private boolean isGeneratedClass(Symbol symbol, VisitorState state) {
+    Symbol current = symbol;
+    while (current instanceof Symbol.ClassSymbol) {
+      if (hasGeneratedAnnotation(current, state)) {
+        return true;
+      }
+      current = current.owner;
+    }
+    return false;
   }
 
-  private boolean isEnumInAbstraction(final ClassTree tree) {
-    return isAbstraction && isEnum(tree);
-  }
-
-  @SuppressWarnings("TreeToString")
-  private boolean isEnum(final ClassTree tree) {
-    return tree.toString().contains("enum");
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    // isAbstract and isGenerated are transient calculations, not relevant to equality checks
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    return super.equals(o);
-  }
-
-  @Override
-  public int hashCode() {
-    // isAbstract and isGenerated are transient calculations, not relevant to equality checks
-    return super.hashCode();
+  private boolean hasGeneratedAnnotation(Symbol symbol, VisitorState state) {
+    return ASTHelpers.hasAnnotation(symbol, "javax.annotation.Generated", state)
+        || ASTHelpers.hasAnnotation(symbol, "javax.annotation.processing.Generated", state)
+        || ASTHelpers.hasAnnotation(symbol, "Generated", state);
   }
 }

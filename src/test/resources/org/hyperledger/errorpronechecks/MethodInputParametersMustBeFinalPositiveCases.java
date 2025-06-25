@@ -16,26 +16,37 @@ package org.hyperledger.errorpronechecks;
 
 public class MethodInputParametersMustBeFinalPositiveCases {
 
+  // Plain instance methods
   // BUG: Diagnostic contains: Method input parameters must be final.
-  public void primativeInputMethod(int value) {}
+  public void objectInput(Object value) {}
 
   // BUG: Diagnostic contains: Method input parameters must be final.
-  public void objectInputMethod(Object value) {}
+  public void primitiveInput(int count) {}
 
   // BUG: Diagnostic contains: Method input parameters must be final.
-  public void mixedInputMethod(Object value, int anotherValue) {}
+  public void mixedParams(Object obj, int count) {}
 
   // BUG: Diagnostic contains: Method input parameters must be final.
-  public void mixedInputMethodFirstFinal(final Object value, int anotherValue) {}
+  public void firstFinal(final Object obj, int count) {}
 
   // BUG: Diagnostic contains: Method input parameters must be final.
-  public void mixedInputMethodSecondFinal(Object value, final int anotherValue) {}
+  public void secondFinal(Object obj, final int count) {}
 
   // BUG: Diagnostic contains: Method input parameters must be final.
-  public void varArgsInputMethod(String... value) {}
+  public void varArgsParam(String... values) {}
 
-  public abstract class abstractClassDefinition {
+  // Static method
+  // BUG: Diagnostic contains: Method input parameters must be final.
+  public static void staticUtility(int value) {}
+
+  // Constructor
+  // BUG: Diagnostic contains: Method input parameters must be final.
+  public MethodInputParametersMustBeFinalPositiveCases(String description, int id) {}
+
+  // Inner abstract class with concrete method
+  public abstract class AbstractInner {
     // BUG: Diagnostic contains: Method input parameters must be final.
-    public void concreteMethodsAreIncluded(int value) {}
+    public void concrete(int value) {}
   }
 }
+
