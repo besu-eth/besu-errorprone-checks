@@ -75,7 +75,9 @@ public class MethodInputParametersMustBeFinal extends BugChecker
   private Description matchParameters(final MethodTree tree) {
     for (final VariableTree inputParameter : tree.getParameters()) {
       if (isMissingFinalModifier(inputParameter)) {
-        System.out.printf("*** >> Missing final modifier for input parameter: %s.%s %n", tree.getName(), inputParameter.getName());
+        System.out.printf(
+            "*** >> Missing final modifier for input parameter: %s.%s %n",
+            tree.getName(), inputParameter.getName());
         return describeMatch(tree);
       }
     }

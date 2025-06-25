@@ -60,7 +60,7 @@ public class MethodInputParametersMustBeFinalTest {
   @Test
   public void methodInputParametersMustBeFinalEnumPositiveCases() {
     compilationHelper
-            .addSourceFile("MethodInputParametersMustBeFinalEnumPositiveCases.java")
-            .doTest();
+        .addSourceFile("MethodInputParametersMustBeFinalEnumPositiveCases.java")
+        .doTest();
   }
 }
