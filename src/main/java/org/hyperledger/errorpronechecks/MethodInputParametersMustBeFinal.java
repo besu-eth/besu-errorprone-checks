@@ -46,6 +46,7 @@ public class MethodInputParametersMustBeFinal extends BugChecker
   @Override
   public Description matchClass(final ClassTree tree, final VisitorState state) {
     if (tree.getSimpleName().contentEquals("BlobType")) {
+      System.out.println("*** >> Handling " + tree.getClass().getName());
       isBlobType = true;
     }
 
