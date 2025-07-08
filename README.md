@@ -20,9 +20,20 @@ These [custom error-prone checks](https://errorprone.info/docs/plugins) are used
 2. Add the following dependency to your gradle file:
 ```groovy
 dependencies {
-    errorprone("org.hyperledger.errorpronechecks:besu-errorprone-checks:1.0.0")
+    errorprone("org.hyperledger.errorpronechecks:besu-errorprone-checks:1.1.0")
 }
 ```
+
+## List of Checks
+The following custom error-prone checks are included in this repository:
+- Banned Methods
+- Avoid creating SecureRandom instances directly
+- Avoid creating MessageDigest instances directly
+- Do not return null Optionals
+- Experimental CLI options annotation must be set `hidden` to `true`
+- Method input parameters must be final
+- Prefer java not-null annotations over JetBrains not-null annotations
+- Loggers modifiers must be private, static, and final
 
 The creation of custom errorprone checkers was largely derived from:
 * https://github.com/tbroyer/gradle-errorprone-plugin
