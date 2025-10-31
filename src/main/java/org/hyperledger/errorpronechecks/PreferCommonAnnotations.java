@@ -43,7 +43,7 @@ public final class PreferCommonAnnotations extends BugChecker implements ImportT
 
   /** ClassName -> preferred import. */
   private static final Map<String, String> PREFERRED_IMPORTS =
-      Map.of("org.jetbrains.annotations.NotNull", "javax.annotation.Nonnull");
+      Map.of("org.jetbrains.annotations.NotNull", "jakarta.validation.constraints.NotNull");
 
   @Override
   public Description matchImport(ImportTree tree, VisitorState state) {
