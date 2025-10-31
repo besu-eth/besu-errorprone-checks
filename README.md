@@ -20,7 +20,7 @@ These [custom error-prone checks](https://errorprone.info/docs/plugins) are used
 2. Add the following dependency to your gradle file:
 ```groovy
 dependencies {
-    errorprone("org.hyperledger.errorpronechecks:besu-errorprone-checks:1.1.0")
+    errorprone("org.hyperledger.errorpronechecks:besu-errorprone-checks:1.2.0")
 }
 ```
 
