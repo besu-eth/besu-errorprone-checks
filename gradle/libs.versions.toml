@@ -4,8 +4,8 @@
 [versions]
 junit-jupiter = "5.10.0"
 google-auto-service = "1.1.1"
-google-errorprone = "2.25.0"
-assertj = "3.25.1"
+google-errorprone = "2.36.0"
+assertj = "3.27.7"
 slf4j = "2.0.10"
 picocli = "4.7.5"
 jetbrain-annotations = "24.1.0"
