@@ -95,7 +95,8 @@ public class GrindableHashKey extends BugChecker
   private static final String ROOTS_FLAG = "GrindableHashKey:GrindableRoots";
 
   private static final ImmutableSet<String> DEFAULT_GRINDABLE_ROOTS =
-      ImmutableSet.of("org.apache.tuweni.bytes.Bytes");
+      ImmutableSet.of("org.apache.tuweni.bytes.Bytes",
+        "org.hyperledger.besu.datatypes.BytesHolder");
 
   private final ImmutableSet<String> grindableRoots;
 
