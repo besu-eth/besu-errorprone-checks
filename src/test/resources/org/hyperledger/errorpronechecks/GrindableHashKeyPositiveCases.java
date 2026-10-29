@@ -25,70 +25,87 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.units.bigints.UInt256;
+import org.hyperledger.besu.datatypes.BytesHolder;
 
 /**
- * The stand-in hierarchy mirrors Tuweni's: a root that declares {@code Comparable} of the root
- * type, so that no implementation can ever declare {@code Comparable} of itself. The test runs the
- * check with {@code GrindableRoots} pointed at {@code GrindableRoot} rather than depending on
- * Tuweni, whose published artifacts target a newer JDK than this project compiles against.
+ * Runs on the default roots against real Tuweni types. {@code BytesHolder} is Besu's, so the test
+ * compiles a stand-in at its real name alongside this file.
  */
 public class GrindableHashKeyPositiveCases {
 
-  interface GrindableRoot extends Comparable<GrindableRoot> {}
+  /** Mirrors Hash: under BytesHolder, but never declares Comparable of itself. */
+  static class HashLike extends BytesHolder {
+    HashLike() {
+      super(Bytes32.ZERO);
+    }
+  }
 
-  /** Mirrors Bytes32/UInt256: final, but only Comparable&lt;GrindableRoot&gt;. */
-  static final class GrindableLeaf implements GrindableRoot {
+  /** Declares Comparable of itself but is not final, so the runtime class may not. */
+  static class ExtensibleSelfComparable extends BytesHolder
+      implements Comparable<ExtensibleSelfComparable> {
+    ExtensibleSelfComparable() {
+      super(Bytes32.ZERO);
+    }
+
     @Override
-    public int compareTo(final GrindableRoot other) {
+    public int compareTo(final ExtensibleSelfComparable other) {
       return 0;
     }
   }
 
-  /** Mirrors the Bytes interface itself: extensible, so runtime classes decide, and they cannot. */
-  interface GrindableSubInterface extends GrindableRoot {}
+  // An interface: its implementations inherit Comparable<Bytes> and never treeify.
+  // BUG: Diagnostic contains: GrindableHashKey
+  Map<Bytes, String> bytesKeyedMap = new HashMap<>();
 
   // BUG: Diagnostic contains: GrindableHashKey
-  Map<GrindableLeaf, String> leafKeyedMap = new HashMap<>();
+  Map<Bytes32, String> bytes32KeyedMap = new HashMap<>();
+
+  // Final, but only Comparable<Bytes>, inherited through UInt256Value and Bytes32.
+  // BUG: Diagnostic contains: GrindableHashKey
+  Map<UInt256, String> uint256KeyedMap = new HashMap<>();
 
   // BUG: Diagnostic contains: GrindableHashKey
-  Map<GrindableRoot, String> rootKeyedMap = new HashMap<>();
+  Map<HashLike, String> hashKeyedMap = new HashMap<>();
 
   // BUG: Diagnostic contains: GrindableHashKey
-  Map<GrindableSubInterface, String> subInterfaceKeyedMap = new HashMap<>();
+  Map<ExtensibleSelfComparable, String> extensibleKeyedMap = new HashMap<>();
 
   // BUG: Diagnostic contains: GrindableHashKey
-  Set<GrindableLeaf> leafSet = new HashSet<>();
+  Set<Bytes32> hashSet = new HashSet<>();
 
   // BUG: Diagnostic contains: GrindableHashKey
-  Map<GrindableLeaf, String> linkedMap = new LinkedHashMap<>();
+  Map<Bytes32, String> linkedMap = new LinkedHashMap<>();
 
   // BUG: Diagnostic contains: GrindableHashKey
-  Map<GrindableLeaf, String> concurrentMap = new ConcurrentHashMap<>();
+  Map<Bytes32, String> concurrentMap = new ConcurrentHashMap<>();
 
   // HashMultimap holds each key's values in a HashSet, so the value position matters too.
   // BUG: Diagnostic contains: GrindableHashKey
-  Multimap<String, GrindableLeaf> multimapValues = HashMultimap.create();
+  Multimap<String, Bytes32> multimapValues = HashMultimap.create();
 
   // BUG: Diagnostic contains: GrindableHashKey
-  Multimap<GrindableLeaf, String> multimapKeys = HashMultimap.create();
+  Multimap<Bytes32, String> multimapKeys = HashMultimap.create();
 
   // BUG: Diagnostic contains: GrindableHashKey
-  Table<GrindableLeaf, String, String> tableRowKey = HashBasedTable.create();
+  Table<Bytes32, String, String> tableRowKey = HashBasedTable.create();
 
   // BUG: Diagnostic contains: GrindableHashKey
-  Set<GrindableLeaf> guavaFactorySet = Sets.newHashSet();
+  Set<Bytes32> guavaFactorySet = Sets.newHashSet();
 
   // BUG: Diagnostic contains: GrindableHashKey
-  Set<GrindableLeaf> concurrentKeySet = ConcurrentHashMap.newKeySet();
+  Set<Bytes32> concurrentKeySet = ConcurrentHashMap.newKeySet();
 
   // Fully qualified constructors resolve to the same type; a textual check would miss this.
   // BUG: Diagnostic contains: GrindableHashKey
-  Map<GrindableLeaf, String> qualifiedConstructor = new java.util.HashMap<>();
+  Map<Bytes32, String> qualifiedConstructor = new java.util.HashMap<>();
 
   void locals() {
     // BUG: Diagnostic contains: GrindableHashKey
-    final Map<GrindableLeaf, String> local = new HashMap<>();
+    final Map<Bytes32, String> local = new HashMap<>();
     // BUG: Diagnostic contains: GrindableHashKey
-    var inferred = new HashMap<GrindableLeaf, String>();
+    var inferred = new HashMap<Bytes32, String>();
   }
 }

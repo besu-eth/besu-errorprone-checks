@@ -57,11 +57,16 @@ import com.sun.tools.javac.code.Types;
  * interface with two different arguments. The combination turns a linear number of inserts into
  * quadratic work whenever the key bytes are attacker-chosen.
  *
+ * <p>Besu's {@code BytesHolder} wraps a {@code Bytes} rather than extending it and delegates its
+ * {@code hashCode} to the held value, so its subtypes - {@code Hash} among them - share the same
+ * grindable hash while sitting outside the {@code Bytes} hierarchy. It is therefore a default root
+ * too.
+ *
  * <p>The check is structural rather than name-based: it flags a key type only when it is a subtype
- * of the grindable root AND does not directly declare {@code Comparable} of itself. {@code Address}
- * is therefore not flagged - it sits outside the {@code Bytes} hierarchy (it extends {@code
- * BytesHolder}) and declares {@code Comparable<Address>} - while {@code UInt256} and {@code
- * Bytes32} are.
+ * of a grindable root AND is not a final class directly declaring {@code Comparable} of itself.
+ * {@code Address} is therefore not flagged - although it descends from {@code BytesHolder}, it is
+ * final and declares {@code Comparable<Address>}, so its bins treeify - while {@code Hash}, {@code
+ * UInt256} and {@code Bytes32} are.
  *
  * <p>Severity is WARNING because a grindable key is acceptable when its bytes cannot be chosen by
  * an attacker - for example keccak outputs. Suppress such sites with a justification.
@@ -75,9 +80,9 @@ import com.sun.tools.javac.code.Types;
 @AutoService(BugChecker.class)
 @BugPattern(
     summary =
-        "Hash-bucketed collection keyed by a Tuweni Bytes-hierarchy type. These keys hash with a"
-            + " grindable base-31 polynomial and can never treeify, so chosen collisions make"
-            + " insertion quadratic. Use a sorted collection (TreeMap/TreeSet/"
+        "Hash-bucketed collection keyed by a type with a grindable byte-polynomial hashCode. These"
+            + " keys hash with an unseeded base-31 polynomial and cannot treeify, so chosen"
+            + " collisions make insertion quadratic. Use a sorted collection (TreeMap/TreeSet/"
             + "ConcurrentSkipListSet/TreeBasedTable) or a key type that declares Comparable of its"
             + " own exact type.",
     severity = WARNING,
@@ -88,14 +93,15 @@ public class GrindableHashKey extends BugChecker
   private static final long serialVersionUID = 1L;
 
   /**
-   * Roots of hierarchies whose {@code hashCode} is cheaply grindable. Configurable so the check can
-   * be tested without the real dependency, and so consumers can add their own: {@code
+   * Roots of hierarchies whose {@code hashCode} is cheaply grindable. Consumers can supply their
+   * own, which replaces the defaults: {@code
    * -XepOpt:GrindableHashKey:GrindableRoots=com.example.Foo,com.example.Bar}
    */
   private static final String ROOTS_FLAG = "GrindableHashKey:GrindableRoots";
 
   private static final ImmutableSet<String> DEFAULT_GRINDABLE_ROOTS =
-      ImmutableSet.of("org.apache.tuweni.bytes.Bytes");
+      ImmutableSet.of(
+          "org.apache.tuweni.bytes.Bytes", "org.hyperledger.besu.datatypes.BytesHolder");
 
   private final ImmutableSet<String> grindableRoots;
 

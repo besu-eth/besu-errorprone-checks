@@ -14,34 +14,30 @@
  */
 package org.hyperledger.errorpronechecks;
 
-import java.util.List;
-
 import com.google.errorprone.CompilationTestHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class GrindableHashKeyTest {
 
-  /**
-   * The case files declare their own stand-in hierarchies rather than depending on Tuweni, whose
-   * published artifacts target a newer JDK than this project compiles against. Pointing the check
-   * at those roots exercises the same logic the default configuration applies to {@code
-   * org.apache.tuweni.bytes.Bytes}.
-   */
-  private static final List<String> ROOTS =
-      List.of(
-          "-XepOpt:GrindableHashKey:GrindableRoots="
-              + "org.hyperledger.errorpronechecks.GrindableHashKeyPositiveCases.GrindableRoot,"
-              + "org.hyperledger.errorpronechecks.GrindableHashKeyNegativeCases.GrindableRoot,"
-              + "org.hyperledger.errorpronechecks.GrindableHashKeyNegativeCases.SelfComparableCapableRoot,"
-              + "org.hyperledger.errorpronechecks.GrindableHashKeyUnsearchedCases.GrindableRoot");
-
   private CompilationTestHelper compilationHelper;
 
+  /**
+   * The case files run on the default roots against real Tuweni types. {@code BytesHolder} is
+   * Besu's and Besu depends on these checks, so a stand-in at its real name is compiled alongside
+   * instead. Dropping either default root therefore fails a test.
+   */
   @BeforeEach
   public void setup() {
     compilationHelper =
-        CompilationTestHelper.newInstance(GrindableHashKey.class, getClass()).setArgs(ROOTS);
+        CompilationTestHelper.newInstance(GrindableHashKey.class, getClass())
+            .addSourceLines(
+                "org/hyperledger/besu/datatypes/BytesHolder.java",
+                "package org.hyperledger.besu.datatypes;",
+                "import org.apache.tuweni.bytes.Bytes;",
+                "public class BytesHolder {",
+                "  protected BytesHolder(final Bytes value) {}",
+                "}");
   }
 
   @Test
@@ -68,21 +64,39 @@ public class GrindableHashKeyTest {
         .doTest();
   }
 
-  /**
-   * With no roots configured the check falls back to Tuweni's {@code Bytes}, which is absent from
-   * this project's classpath. An absent root must simply have nothing to say, rather than the check
-   * guessing from type names.
-   */
   @Test
-  public void silentWhenNoConfiguredRootIsOnTheClasspath() {
+  public void configuredRootsAreHonoured() {
     CompilationTestHelper.newInstance(GrindableHashKey.class, getClass())
+        .setArgs("-XepOpt:GrindableHashKey:GrindableRoots=com.example.Custom")
         .addSourceLines(
-            "NoRoots.java",
+            "com/example/Custom.java", "package com.example;", "public interface Custom {}")
+        .addSourceLines(
+            "CustomKeys.java",
             "import java.util.HashMap;",
             "import java.util.Map;",
-            "public class NoRoots {",
-            "  interface Whatever extends Comparable<Whatever> {}",
-            "  Map<Whatever, String> plain = new HashMap<>();",
+            "public class CustomKeys {",
+            "  static final class Leaf implements com.example.Custom {}",
+            "  // BUG: Diagnostic contains: GrindableHashKey",
+            "  Map<Leaf, String> leafKeyed = new HashMap<>();",
+            "}")
+        .doTest();
+  }
+
+  /**
+   * A configured root that is absent from the classpath must simply have nothing to say, rather
+   * than the check guessing from type names.
+   */
+  @Test
+  public void silentWhenConfiguredRootIsAbsent() {
+    CompilationTestHelper.newInstance(GrindableHashKey.class, getClass())
+        .setArgs("-XepOpt:GrindableHashKey:GrindableRoots=com.example.Absent")
+        .addSourceLines(
+            "AbsentRoot.java",
+            "import java.util.HashMap;",
+            "import java.util.Map;",
+            "public class AbsentRoot {",
+            "  interface Absent {}",
+            "  Map<Absent, String> plain = new HashMap<>();",
             "}")
         .doTest();
   }

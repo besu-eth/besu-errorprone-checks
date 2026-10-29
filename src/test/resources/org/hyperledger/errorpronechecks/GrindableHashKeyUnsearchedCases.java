@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import org.apache.tuweni.bytes.Bytes32;
 
 /**
  * Every site here is grindable. HINT marks those that are provably only populated and iterated, so
@@ -25,99 +26,90 @@ import java.util.Set;
  */
 public class GrindableHashKeyUnsearchedCases {
 
-  interface GrindableRoot extends Comparable<GrindableRoot> {}
-
-  static final class Leaf implements GrindableRoot {
-    @Override
-    public int compareTo(final GrindableRoot other) {
-      return 0;
-    }
-  }
-
   // BUG: Diagnostic matches: SET_HINT
-  private final Set<Leaf> privateIterated = new HashSet<>();
+  private final Set<Bytes32> privateIterated = new HashSet<>();
 
   // Not private: other classes may search it.
   // BUG: Diagnostic matches: NO_HINT
-  final Set<Leaf> packageVisible = new HashSet<>();
+  final Set<Bytes32> packageVisible = new HashSet<>();
 
-  private final Set<Leaf> assignedInConstructor;
+  private final Set<Bytes32> assignedInConstructor;
 
   GrindableHashKeyUnsearchedCases() {
     // BUG: Diagnostic matches: SET_HINT
     assignedInConstructor = new HashSet<>();
   }
 
-  void fill(final Leaf leaf) {
-    privateIterated.add(leaf);
-    this.assignedInConstructor.add(leaf);
-    packageVisible.add(leaf);
+  void fill(final Bytes32 key) {
+    privateIterated.add(key);
+    this.assignedInConstructor.add(key);
+    packageVisible.add(key);
   }
 
   long count() {
     return privateIterated.stream().count() + assignedInConstructor.size();
   }
 
-  void localSetOnlyIterated(final Iterable<Leaf> in) {
+  void localSetOnlyIterated(final Iterable<Bytes32> in) {
     // BUG: Diagnostic matches: SET_HINT
-    final Set<Leaf> s = new HashSet<>();
-    for (final Leaf l : in) {
+    final Set<Bytes32> s = new HashSet<>();
+    for (final Bytes32 l : in) {
       s.add(l);
     }
-    for (final Leaf l : s) {
+    for (final Bytes32 l : s) {
       System.out.println(l);
     }
     s.forEach(l -> System.out.println(l));
   }
 
-  void localSetSearched(final Leaf leaf) {
+  void localSetSearched(final Bytes32 key) {
     // BUG: Diagnostic matches: NO_HINT
-    final Set<Leaf> s = new HashSet<>();
-    s.add(leaf);
-    System.out.println(s.contains(leaf));
+    final Set<Bytes32> s = new HashSet<>();
+    s.add(key);
+    System.out.println(s.contains(key));
   }
 
-  void localSetAddResultUsed(final Leaf leaf) {
+  void localSetAddResultUsed(final Bytes32 key) {
     // BUG: Diagnostic matches: NO_HINT
-    final Set<Leaf> s = new HashSet<>();
-    if (s.add(leaf)) {
-      System.out.println(leaf);
+    final Set<Bytes32> s = new HashSet<>();
+    if (s.add(key)) {
+      System.out.println(key);
     }
   }
 
-  Set<Leaf> localSetReturned() {
+  Set<Bytes32> localSetReturned() {
     // BUG: Diagnostic matches: NO_HINT
-    final Set<Leaf> s = new HashSet<>();
+    final Set<Bytes32> s = new HashSet<>();
     return s;
   }
 
   void localSetPassedAlong() {
     // BUG: Diagnostic matches: NO_HINT
-    final Set<Leaf> s = new HashSet<>();
+    final Set<Bytes32> s = new HashSet<>();
     System.out.println(s);
   }
 
-  void localMapOnlyIterated(final Leaf leaf) {
+  void localMapOnlyIterated(final Bytes32 key) {
     // BUG: Diagnostic matches: MAP_HINT
-    final Map<Leaf, String> m = new HashMap<>();
-    m.put(leaf, "x");
-    for (final Map.Entry<Leaf, String> e : m.entrySet()) {
+    final Map<Bytes32, String> m = new HashMap<>();
+    m.put(key, "x");
+    for (final Map.Entry<Bytes32, String> e : m.entrySet()) {
       System.out.println(e);
     }
     m.values().forEach(System.out::println);
   }
 
-  void localMapSearched(final Leaf leaf) {
+  void localMapSearched(final Bytes32 key) {
     // BUG: Diagnostic matches: NO_HINT
-    final Map<Leaf, String> m = new HashMap<>();
-    m.put(leaf, "x");
-    System.out.println(m.get(leaf));
+    final Map<Bytes32, String> m = new HashMap<>();
+    m.put(key, "x");
+    System.out.println(m.get(key));
   }
 
-  void localMapSearchedThroughView(final Leaf leaf) {
+  void localMapSearchedThroughView(final Bytes32 key) {
     // BUG: Diagnostic matches: NO_HINT
-    final Map<Leaf, String> m = new HashMap<>();
-    m.put(leaf, "x");
-    System.out.println(m.keySet().contains(leaf));
+    final Map<Bytes32, String> m = new HashMap<>();
+    m.put(key, "x");
+    System.out.println(m.keySet().contains(key));
   }
 }
