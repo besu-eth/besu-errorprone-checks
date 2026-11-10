@@ -14,14 +14,24 @@
  */
 package org.hyperledger.errorpronechecks;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.HashBiMap;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -101,6 +111,62 @@ public class GrindableHashKeyPositiveCases {
   // Fully qualified constructors resolve to the same type; a textual check would miss this.
   // BUG: Diagnostic contains: GrindableHashKey
   Map<Bytes32, String> qualifiedConstructor = new java.util.HashMap<>();
+
+  // The bounded-LRU idiom: an anonymous subclass of LinkedHashMap.
+  Map<HashLike, String> anonymousLru =
+      // BUG: Diagnostic contains: GrindableHashKey
+      new LinkedHashMap<HashLike, String>(16, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(final Map.Entry<HashLike, String> eldest) {
+          return size() > 300;
+        }
+      };
+
+  // BUG: Diagnostic contains: GrindableHashKey
+  Set<Bytes32> anonymousWithDiamond = new HashSet<>() {};
+
+  /** A named subclass whose type parameters are not the map's. */
+  static class LruMap<V, K> extends LinkedHashMap<K, V> {}
+
+  // BUG: Diagnostic contains: Key type here is org.apache.tuweni.bytes.Bytes32
+  Map<Bytes32, String> namedSubclass = new LruMap<String, Bytes32>();
+
+  /** A subclass that fixes the key type itself. */
+  static class HashKeyedMap extends HashMap<HashLike, String> {}
+
+  // BUG: Diagnostic contains: GrindableHashKey
+  Map<HashLike, String> fixedKeySubclass = new HashKeyedMap();
+
+  // BUG: Diagnostic contains: GrindableHashKey
+  BiMap<Bytes32, String> biMapKeys = HashBiMap.create();
+
+  // A BiMap hashes its values as well as its keys.
+  // BUG: Diagnostic contains: GrindableHashKey
+  BiMap<String, Bytes32> biMapValues = HashBiMap.create();
+
+  // BUG: Diagnostic contains: GrindableHashKey
+  ListMultimap<Bytes32, String> arrayListMultimapKeys = ArrayListMultimap.create();
+
+  // BUG: Diagnostic contains: GrindableHashKey
+  SetMultimap<String, Bytes32> linkedMultimapValues = LinkedHashMultimap.create();
+
+  // BUG: Diagnostic contains: GrindableHashKey
+  Multiset<Bytes32> multiset = HashMultiset.create();
+
+  // BUG: Diagnostic contains: GrindableHashKey
+  Map<Bytes32, String> expectedSizeMap = Maps.newHashMapWithExpectedSize(4);
+
+  // BUG: Diagnostic contains: GrindableHashKey
+  Map<Bytes32, String> guavaLinkedMap = Maps.newLinkedHashMap();
+
+  // BUG: Diagnostic contains: GrindableHashKey
+  Set<Bytes32> guavaLinkedSet = Sets.newLinkedHashSet();
+
+  // BUG: Diagnostic contains: GrindableHashKey
+  Set<Bytes32> guavaConcurrentSet = Sets.newConcurrentHashSet();
+
+  // BUG: Diagnostic contains: GrindableHashKey
+  Set<Bytes32> jdkLinkedSetFactory = LinkedHashSet.newLinkedHashSet(4);
 
   void locals() {
     // BUG: Diagnostic contains: GrindableHashKey

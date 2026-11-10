@@ -34,6 +34,7 @@ The following custom error-prone checks are included in this repository:
 - Method input parameters must be final
 - Prefer java not-null annotations over JetBrains not-null annotations
 - Loggers modifiers must be private, static, and final
+- Hash-bucketed collections must not be keyed by types with a grindable hashCode (`GrindableHashKey`)
 
 The creation of custom errorprone checkers was largely derived from:
 * https://github.com/tbroyer/gradle-errorprone-plugin

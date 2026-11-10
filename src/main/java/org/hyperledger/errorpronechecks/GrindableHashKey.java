@@ -68,6 +68,22 @@ import com.sun.tools.javac.code.Types;
  * final and declares {@code Comparable<Address>}, so its bins treeify - while {@code Hash}, {@code
  * UInt256} and {@code Bytes32} are.
  *
+ * <p>A creation expression is matched when its type is, or extends, one of the hash-backed
+ * collection classes, so anonymous subclasses (the usual {@code removeEldestEntry} LRU idiom) and
+ * named subclasses are caught along with direct construction. Static factories are matched by name
+ * from a fixed list.
+ *
+ * <p>The check cannot see:
+ *
+ * <ul>
+ *   <li>hash tables created inside a generic wrapper, such as a {@code LimitedSet<T>} that builds a
+ *       {@code LinkedHashMap<T, ...>} internally. At the creation site the key is a type variable,
+ *       and callers that instantiate the wrapper with a grindable type are not flagged;
+ *   <li>stream collectors such as {@code Collectors.toSet}, {@code toMap} and {@code groupingBy},
+ *       which build a {@code HashSet} or {@code HashMap} internally;
+ *   <li>builders such as {@code MultimapBuilder.hashKeys()}, and any factory not in the list below.
+ * </ul>
+ *
  * <p>Severity is WARNING because a grindable key is acceptable when its bytes cannot be chosen by
  * an attacker - for example keccak outputs. Suppress such sites with a justification.
  *
@@ -125,25 +141,65 @@ public class GrindableHashKey extends BugChecker
           "com.google.common.collect.HashMultimap",
           "com.google.common.collect.HashBasedTable");
 
-  /** Static factories that return one of the above. */
+  /** Static factories that return a hash-bucketed collection. */
   private static final ImmutableSet<String> HASH_BACKED_FACTORIES =
       ImmutableSet.of(
-          "com.google.common.collect.HashMultimap.create",
+          "com.google.common.collect.ArrayListMultimap.create",
+          "com.google.common.collect.ConcurrentHashMultiset.create",
           "com.google.common.collect.HashBasedTable.create",
+          "com.google.common.collect.HashBiMap.create",
+          "com.google.common.collect.HashMultimap.create",
+          "com.google.common.collect.HashMultiset.create",
+          "com.google.common.collect.LinkedHashMultimap.create",
+          "com.google.common.collect.LinkedHashMultiset.create",
+          "com.google.common.collect.LinkedListMultimap.create",
+          "com.google.common.collect.Maps.newConcurrentMap",
           "com.google.common.collect.Maps.newHashMap",
+          "com.google.common.collect.Maps.newHashMapWithExpectedSize",
+          "com.google.common.collect.Maps.newLinkedHashMap",
+          "com.google.common.collect.Maps.newLinkedHashMapWithExpectedSize",
+          "com.google.common.collect.Sets.newConcurrentHashSet",
           "com.google.common.collect.Sets.newHashSet",
           "com.google.common.collect.Sets.newHashSetWithExpectedSize",
+          "com.google.common.collect.Sets.newLinkedHashSet",
+          "com.google.common.collect.Sets.newLinkedHashSetWithExpectedSize",
           "java.util.concurrent.ConcurrentHashMap.newKeySet",
           "java.util.HashMap.newHashMap",
-          "java.util.HashSet.newHashSet");
+          "java.util.HashSet.newHashSet",
+          "java.util.LinkedHashMap.newLinkedHashMap",
+          "java.util.LinkedHashSet.newLinkedHashSet");
 
   @Override
   public Description matchNewClass(final NewClassTree tree, final VisitorState state) {
     final Type type = ASTHelpers.getType(tree);
-    if (type == null || !HASH_BACKED.contains(erasedName(type, state))) {
+    if (type == null) {
       return Description.NO_MATCH;
     }
-    return describeIfGrindable(tree, type, state);
+    final Type hashBacked = hashBackedSupertype(type, state);
+    if (hashBacked == null) {
+      return Description.NO_MATCH;
+    }
+    return describeIfGrindable(tree, hashBacked, state);
+  }
+
+  /**
+   * The parameterization of the hash-backed class that {@code type} is or extends, or null. Going
+   * through the supertype recovers the key types of an anonymous or named subclass, whose own type
+   * arguments (if any) need not line up with the map's.
+   */
+  private static Type hashBackedSupertype(final Type type, final VisitorState state) {
+    final Types types = state.getTypes();
+    for (final String name : HASH_BACKED) {
+      final Symbol symbol = state.getSymbolFromString(name);
+      if (symbol == null) {
+        continue;
+      }
+      final Type supertype = types.asSuper(type, symbol);
+      if (supertype != null) {
+        return supertype;
+      }
+    }
+    return null;
   }
 
   @Override
@@ -183,8 +239,9 @@ public class GrindableHashKey extends BugChecker
   }
 
   /**
-   * Type arguments that end up hashed. For a Multimap the values count too, since HashMultimap
-   * holds each key's values in a HashSet; likewise a Table's row and column keys.
+   * Type arguments that end up hashed. The second argument counts too where it is hashed: a BiMap's
+   * values, a Table's column keys, and a SetMultimap's values, which HashMultimap and
+   * LinkedHashMultimap hold in a hash set per key. A ListMultimap's values sit in a list.
    */
   private List<Type> keyPositions(final Type type, final VisitorState state) {
     final List<Type> args = type.getTypeArguments();
@@ -193,11 +250,14 @@ public class GrindableHashKey extends BugChecker
       return keys;
     }
     final Types types = state.getTypes();
-    final boolean multiKeyed =
-        isSubtypeOfErased(type, "com.google.common.collect.Multimap", state, types)
-            || isSubtypeOfErased(type, "com.google.common.collect.Table", state, types);
+    final boolean secondArgumentHashed =
+        isSubtypeOfErased(type, "com.google.common.collect.BiMap", state, types)
+            || isSubtypeOfErased(type, "com.google.common.collect.Table", state, types)
+            || (isSubtypeOfErased(type, "com.google.common.collect.SetMultimap", state, types)
+                && !isSubtypeOfErased(
+                    type, "com.google.common.collect.SortedSetMultimap", state, types));
     keys.add(args.get(0));
-    if (multiKeyed && args.size() > 1) {
+    if (secondArgumentHashed && args.size() > 1) {
       keys.add(args.get(1));
     }
     return keys;

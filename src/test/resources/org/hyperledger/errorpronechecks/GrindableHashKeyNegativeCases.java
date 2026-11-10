@@ -14,6 +14,8 @@
  */
 package org.hyperledger.errorpronechecks;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Table;
@@ -60,6 +62,12 @@ public class GrindableHashKeyNegativeCases {
   Set<Bytes32> sortedSet = new TreeSet<>();
   Set<Bytes32> skipListSet = new ConcurrentSkipListSet<>();
   Table<Bytes32, String, String> sortedTable = TreeBasedTable.create();
+
+  // An anonymous subclass of a sorted map is still sorted.
+  Map<Bytes32, String> anonymousSorted = new TreeMap<Bytes32, String>() {};
+
+  // ArrayListMultimap hashes its keys but keeps each key's values in a list.
+  ListMultimap<String, Bytes32> listValues = ArrayListMultimap.create();
 
   // hashKeys() is fine when the values are sorted, and this key is not a grindable type.
   SetMultimap<String, Bytes32> sortedValues = MultimapBuilder.hashKeys().treeSetValues().build();
