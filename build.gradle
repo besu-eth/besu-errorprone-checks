@@ -19,6 +19,9 @@ dependencies {
     testImplementation libs.junit.jupiter
     testImplementation libs.google.errorprone.testhelpers
     testImplementation libs.assertj.core
+    // Real Tuweni types for GrindableHashKey, whose default roots include Tuweni's Bytes.
+    testImplementation libs.tuweni.bytes
+    testImplementation libs.tuweni.units
     testRuntimeOnly libs.picocli
     testRuntimeOnly libs.jetbrain.annotations
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

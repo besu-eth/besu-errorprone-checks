@@ -11,6 +11,7 @@ picocli = "4.7.5"
 jetbrain-annotations = "24.1.0"
 spotless = "6.25.0"
 artifactory = "5.2.0"
+tuweni = "2.8.0"
 
 [libraries]
 picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
@@ -27,6 +28,8 @@ google-errorprone-testhelpers = { module = "com.google.errorprone:error_prone_te
 # Testing libraries
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
 assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
+tuweni-bytes = { module = "io.consensys.tuweni:tuweni-bytes", version.ref = "tuweni" }
+tuweni-units = { module = "io.consensys.tuweni:tuweni-units", version.ref = "tuweni" }
 
 [plugins]
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
