@@ -31,6 +31,7 @@ The following custom error-prone checks are included in this repository:
 - Avoid creating MessageDigest instances directly
 - Do not return null Optionals
 - Experimental CLI options annotation must be set `hidden` to `true`
+- CLI option fields must not be compile-time constants (`CliOptionMustNotBeConstant`)
 - Method input parameters must be final
 - Prefer java not-null annotations over JetBrains not-null annotations
 - Loggers modifiers must be private, static, and final
